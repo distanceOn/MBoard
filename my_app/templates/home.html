@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+    <h1>Добро пожаловать на главную страницу, {{ user.username }}!</h1>  <!-- Никнейм пользователя -->
+    
+    <nav>
+        <ul>
+            <li><a href="{% url 'create_advertisement' %}">Создать объявление</a></li>
+            <li><a href="{% url 'view_responses' %}">Посмотреть отклики</a></li>
+            <li><a href="{% url 'logout' %}">Выйти</a></li>  <!-- Кнопка для выхода -->
+        </ul>
+    </nav>
+    
+    <h2>Список объявлений:</h2>
+    <ul>
+        {% for ad in advertisements %}
+        <li>
+            <a href="{% url 'view_advertisement' ad.id %}">{{ ad.title }}</a>
+            <!-- Здесь можно добавить другие детали объявления, например, ad.content -->
+        </li>
+        {% endfor %}
+    </ul>
+
+
+{% endblock %}
+
+
+

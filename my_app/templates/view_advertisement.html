@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+
+{% block title %}Просмотр объявления{% endblock %}
+
+{% block content %}
+<a href="{% url 'home'  %}">На главную</a>
+    <h1>{{ advertisement.title }}</h1>
+    <p>{{ advertisement.content }}</p>
+    
+    {% if file_type == 'image' %}
+        <img src="{{ advertisement.attached_file.url }}" alt="Прикрепленное изображение">
+    {% elif file_type == 'pdf' %}
+        <embed src="{{ advertisement.attached_file.url }}" type="application/pdf" width="600" height="500">
+    {% elif file_type == 'video' %}
+        <video width="320" height="240" controls>
+            <source src="{{ advertisement.attached_file.url }}" type="video/mp4">
+            Ваш браузер не поддерживает видео.
+        </video>
+    {% endif %}
+
+    <p>File type: {{ file_type }}</p>
+
+    <h2>Отправить отклик</h2>
+    <form method="post" action="">
+        {% csrf_token %}
+        {{ response_form.as_p }}
+        <button type="submit">Отправить</button>
+    </form>
+{% endblock %}

@@ -1,0 +1,20 @@
+{% block content %}
+<a href="{% url 'home'  %}">На главную</a>
+
+   <h1>Ваши отклики</h1>
+<form method="post">
+    {% csrf_token %}
+    {{ filter_form.category }}
+    <button type="submit">Применить фильтр</button>
+</form>
+<ul>
+    {% for response in responses %}
+        <li>
+            {{ response.content }}
+           <a href="{% url 'manage_response' response.id 'approve' %}">Принять</a> |
+<a href="{% url 'manage_response' response.id 'reject' %}">Удалить</a>
+        </li>
+    {% endfor %}
+</ul>
+
+{% endblock %}
