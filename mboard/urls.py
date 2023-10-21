@@ -34,6 +34,8 @@ urlpatterns = [
     path('accounts/login/', auth_views.LoginView.as_view(next_page='home'), name='login'),
     path('accounts/logout/', auth_views.LogoutView.as_view(next_page='home'), name='logout'),
     path('manage_response/<int:response_id>/<str:action>/', views.manage_response, name='manage_response'),
+    path('send_newsletter/', views.send_newsletter, name='send_newsletter'),
+
 ]
 
 

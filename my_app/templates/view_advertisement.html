@@ -21,7 +21,7 @@
     <p>File type: {{ file_type }}</p>
 
     <h2>Отправить отклик</h2>
-    <form method="post" action="">
+    <form method="post" action="{% url 'create_response' advertisement.id %}">
         {% csrf_token %}
         {{ response_form.as_p }}
         <button type="submit">Отправить</button>

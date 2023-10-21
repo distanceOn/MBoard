@@ -1,11 +1,12 @@
+import os
 from django.shortcuts import get_object_or_404, render
 
 # Create your views here.
 from django.contrib.auth import authenticate, login
 from django.shortcuts import render, redirect
-from .forms import CustomUserCreationForm, AdvertisementForm, ResponseFilterForm, ResponseForm, VerificationCodeForm
+from .forms import CustomUserCreationForm, AdvertisementForm, NewsletterForm, ResponseFilterForm, ResponseForm, VerificationCodeForm
 from .models import Advertisement, CustomUser, Response
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required,user_passes_test
 from django.core.mail import send_mail
 import random
 import string
@@ -40,8 +41,23 @@ def create_advertisement(request):
     return render(request, 'create_advertisement.html', {'form': form})
 
 
+from django.core.mail import send_mail
+
+def send_notification_email(subject, message, recipient_list):
+    print("Sending notification email...")
+    send_mail(
+        subject,
+        message,
+        os.getenv('EMAIL_HOST_USER'),
+        recipient_list,
+        fail_silently=False,
+    )
+    print("Notification email sent!")
+
+
 @login_required
 def create_response(request, ad_id):
+    print("Creating response...") 
     advertisement = Advertisement.objects.get(id=ad_id)
     if request.method == 'POST':
         form = ResponseForm(request.POST)
@@ -62,16 +78,7 @@ def create_response(request, ad_id):
     return render(request, 'create_response.html', {'form': form, 'advertisement': advertisement})
 
 
-from django.core.mail import send_mail
 
-def send_notification_email(subject, message, recipient_list):
-    send_mail(
-        subject,
-        message,
-        'from@example.com',
-        recipient_list,
-        fail_silently=False,
-    )
     
     
 @login_required
@@ -136,10 +143,11 @@ def send_verification_email(user):
     code = generate_verification_code()
     user.email_verification_code = code
     user.save()
+    print("Email:", os.getenv('EMAIL_HOST_USER'))
     send_mail(
         'Подтверждение регистрации',
         f'Ваш код подтверждения: {code}',
-        'no-reply@yourwebsite.com',
+        os.getenv('EMAIL_HOST_USER'),
         [user.email],
         fail_silently=False,
     )
@@ -184,6 +192,14 @@ def manage_response(request, response_id, action):
             response.is_hidden = True  # Скрываем отклик после одобрения
             response.save()
             messages.success(request, 'Отклик одобрен успешно.')
+
+            # Отправить уведомление пользователю, который оставил отклик
+            send_notification_email(
+                'Ваш отклик был принят',
+                f'Ваш отклик на объявление "{response.advertisement.title}" был принят.',
+                [response.user.email]
+            )
+
         elif action == 'reject':
             response.is_accepted = False
             response.is_hidden = True  # Скрываем отклик после отклонения
@@ -195,3 +211,22 @@ def manage_response(request, response_id, action):
         messages.error(request, 'Отклик не найден.')
     
     return redirect('view_responses')  # Перенаправляем пользователя на страницу с откликами
+
+@login_required
+@user_passes_test(lambda u: u.is_staff) # только для пользователей с правами админа
+def send_newsletter(request):
+    if request.method == 'POST':
+        form = NewsletterForm(request.POST)
+        if form.is_valid():
+            newsletter = form.save()
+            recipients = CustomUser.objects.values_list('email', flat=True)
+            send_notification_email(
+                newsletter.title,
+                newsletter.content,
+                list(recipients)
+            )
+            messages.success(request, 'Рассылка отправлена успешно!')
+            return redirect('home')
+    else:
+        form = NewsletterForm()
+    return render(request, 'send_newsletter.html', {'form': form})

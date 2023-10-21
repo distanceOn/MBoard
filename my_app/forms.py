@@ -1,5 +1,5 @@
 from django import forms
-from .models import CategoryChoices, CustomUser, Advertisement, Response
+from .models import CategoryChoices, CustomUser, Advertisement, Newsletter, Response
 from django.contrib.auth.hashers import make_password
 
 
@@ -36,3 +36,8 @@ class ResponseFilterForm(forms.Form):
         required=False,  # Делаем поле необязательным
         widget=forms.Select(attrs={'onchange': 'this.form.submit();'}),  # Автоматическая отправка формы при изменении
     )
+
+class NewsletterForm(forms.ModelForm):
+    class Meta:
+        model = Newsletter
+        fields = ['title', 'content']
